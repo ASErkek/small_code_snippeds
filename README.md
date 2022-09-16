@@ -1,2 +1,2 @@
-# small_code_snippeds
+# small_code_snippets
 very small codes for myself
