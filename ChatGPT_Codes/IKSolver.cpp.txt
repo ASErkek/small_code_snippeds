@@ -1,0 +1,61 @@
+#include <iostream>
+#include <cmath>
+#include <Eigen/Dense>
+
+using namespace std;
+using namespace Eigen;
+
+const int MAX_ITERATIONS = 1000;
+const double EPSILON = 0.001;
+
+// Define the lengths of the links in the robotic arm
+const double l1 = 1;
+const double l2 = 1;
+const double l3 = 1;
+const double l4 = 1;
+const double l5 = 1;
+
+// Define the forward kinematics function
+Vector3d forward_kinematics(double theta1, double theta2, double theta3, double theta4, double theta5) {
+    Vector3d p;
+    p[0] = l1 * cos(theta1) + l2 * cos(theta1 + theta2) + l3 * cos(theta1 + theta2 + theta3) + l4 * cos(theta1 + theta2 + theta3 + theta4) + l5 * cos(theta1 + theta2 + theta3 + theta4 + theta5);
+    p[1] = l1 * sin(theta1) + l2 * sin(theta1 + theta2) + l3 * sin(theta1 + theta2 + theta3) + l4 * sin(theta1 + theta2 + theta3 + theta4) + l5 * sin(theta1 + theta2 + theta3 + theta4 + theta5);
+    p[2] = 0;
+    return p;
+}
+
+// Define the inverse kinematics function
+VectorXd inverse_kinematics(Vector3d end_effector_pos, VectorXd initial_joint_angles) {
+    VectorXd theta(5);
+    theta = initial_joint_angles;
+    Vector3d e;
+    Vector3d p;
+
+    for (int i = 0; i < MAX_ITERATIONS; i++) {
+        p = forward_kinematics(theta[0], theta[1], theta[2], theta[3], theta[4]);
+        e = end_effector_pos - p;
+        if (e.norm() < EPSILON) {
+            break;
+        }
+        // Update the joint angles using gradient descent
+        theta = theta + 0.1 * e;
+    }
+
+    return theta;
+}
+
+int main() {
+    Vector3d end_effector_pos;
+    VectorXd initial_joint_angles(5);
+    VectorXd theta(5);
+
+    // Set the desired end-effector position
+    end_effector_pos << 2, 3, 0;
+
+    // Set the initial joint angles
+    initial_joint_angles << 0, 0, 0, 0, 0;
+
+    // Solve for the joint angles that achieve the desired end-effector position
+    theta = inverse_kinematics(end_effector_pos, initial_joint_angles);
+
+    cout << "The joint angles are: " << endl << theta
